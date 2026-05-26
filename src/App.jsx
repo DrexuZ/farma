@@ -89,7 +89,7 @@ function App() {
   // Si hay sesión, mostramos el CRM
   return (
     <MainLayout setVistaActiva={setVistaActiva} vistaActiva={vistaActiva} perfil={perfil} onLogout={handleLogout}>
-      {vistaActiva === 'Dashboard' && <DashboardPage />}
+      {vistaActiva === 'Inicio' && <DashboardPage />}
       {vistaActiva === 'Clientes' && <ClientesPage />}
       {vistaActiva === 'ClientesCerrados' && <ClientesCerradosPage />}
       {vistaActiva === 'Finanzas' && <FinanzasPage />}
