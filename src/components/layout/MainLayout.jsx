@@ -18,7 +18,7 @@ export default function MainLayout({ children, vistaActiva, setVistaActiva, perf
         if (esSuperAdmin) return true; // El Superadmin lo ve todo
         
         // 2. Restringido estrictamente a los 3 módulos del Supervisor
-        const accesosSupervisor = ['Clientes', 'ClientesCerrados', 'Inventario'];
+        const accesosSupervisor = ['Clientes', 'ClientesCerrados', 'Inventario', 'Finanzas', 'Proyectos', 'Configuracion', 'Roles', 'Inicio'];
         return accesosSupervisor.includes(vista);
     };
 
