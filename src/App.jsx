@@ -25,26 +25,55 @@ function App() {
     // 1. Escuchar sesión actual al cargar
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSesion(session);
-      if (session) cargarPerfil(session.user.id);
+      // CAMBIO: Ahora pasamos todo el objeto 'user' en lugar de solo el 'id'
+      if (session) cargarPerfil(session.user);
       else setCargando(false);
     });
 
     // 2. Escuchar cambios (cuando el usuario inicia o cierra sesión)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSesion(session);
-      if (session) cargarPerfil(session.user.id);
+      if (session) cargarPerfil(session.user);
       else { setPerfil(null); setCargando(false); }
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
-  const cargarPerfil = async (userId) => {
-    const { data } = await supabase.from('perfiles').select('*').eq('id', userId).single();
+  // Recibimos el objeto user completo para leer su email y nombre de Google
+  const cargarPerfil = async (user) => {
+    const { data } = await supabase.from('perfiles').select('*').eq('id', user.id).single();
+    
     if (data) {
+      // Si el perfil ya existe en la base de datos, lo cargamos
       setPerfil(data);
-      // Si el supervisor entra y la vista Inicio (Dashboard) está bloqueada, lo movemos a Clientes
       if (data.rol === 'Supervisor') setVistaActiva('Clientes');
+    } else {
+      // SI NO EXISTE (Primer inicio de sesión), aplicamos tus reglas maestras:
+      const esSuperAdmin = user.email === 'novasolum.info@gmail.com';
+      const rolAsignado = esSuperAdmin ? 'SA' : 'Supervisor';
+      
+      const nuevoPerfil = {
+        id: user.id,
+        email: user.email,
+        rol: rolAsignado,
+        // Intentamos sacar el nombre que viene de Google, si no hay, ponemos 'Usuario'
+        nombre_completo: user.user_metadata?.full_name || 'Usuario Nuevo' 
+      };
+
+      // Guardamos el nuevo perfil en Supabase
+      const { data: perfilCreado, error } = await supabase
+        .from('perfiles')
+        .insert([nuevoPerfil])
+        .select()
+        .single();
+
+      if (perfilCreado) {
+        setPerfil(perfilCreado);
+        if (perfilCreado.rol === 'Supervisor') setVistaActiva('Clientes');
+      } else if (error) {
+        console.error("Error al crear el perfil:", error.message);
+      }
     }
     setCargando(false);
   };
@@ -66,7 +95,8 @@ function App() {
 
   // Si no hay sesión, mostramos la pantalla de Login
   if (!sesion) return <LoginPage />;
-  // NUEVO: Pantalla de bloqueo para usuarios no aprobados
+  
+  // Pantalla de bloqueo para usuarios no aprobados (o pendientes)
   if (perfil && perfil.rol === 'Pendiente') {
     return (
       <div className="h-screen bg-slate-100 flex flex-col items-center justify-center p-6">
@@ -86,7 +116,8 @@ function App() {
       </div>
     );
   }
-  // Si hay sesión, mostramos el CRM
+  
+  // Si hay sesión y está aprobado, mostramos el CRM
   return (
     <MainLayout setVistaActiva={setVistaActiva} vistaActiva={vistaActiva} perfil={perfil} onLogout={handleLogout}>
       {vistaActiva === 'Inicio' && <DashboardPage />}
@@ -101,5 +132,4 @@ function App() {
   );
 }
 
-// ¡AQUÍ ESTÁ LA LÍNEA QUE FALTABA!
 export default App;
