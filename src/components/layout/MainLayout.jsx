@@ -1,4 +1,4 @@
-import { useState } from 'react';
+    import { useState } from 'react';
 
 export default function MainLayout({ children, vistaActiva, setVistaActiva, perfil, onLogout }) {
     // Estado para el menú hamburguesa en celulares
@@ -13,7 +13,7 @@ export default function MainLayout({ children, vistaActiva, setVistaActiva, perf
     // Reglas de negocio para accesos
     const tieneAcceso = (vista) => {
         if (perfil?.rol === 'SA') return true; // El Jefe lo ve todo
-        const accesosSupervisor = ['Clientes', 'ClientesCerrados', 'Inventario'];
+        const accesosSupervisor = ['Clientes', 'ClientesCerrados', 'Inventario', 'Dashboard', 'Configuracion', 'Finanzas', 'Proyectos', 'Roles'];
         return accesosSupervisor.includes(vista);
     };
 
