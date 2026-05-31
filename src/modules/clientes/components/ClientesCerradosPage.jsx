@@ -13,8 +13,9 @@ export default function ClientesCerradosPage() {
 
     const fetchCerrados = async () => {
         setCargando(true);
+        // CAMBIO CLAVE 1: Ahora consultamos la tabla 'leads'
         const { data, error } = await supabase
-            .from('clientes')
+            .from('leads')
             .select('*')
             .eq('cerrado', true)
             .order('fecha_creacion', { ascending: false });
@@ -32,8 +33,8 @@ export default function ClientesCerradosPage() {
         if (busqueda) {
             const b = busqueda.toLowerCase();
             resultado = resultado.filter(c =>
-                (c.nombres?.toLowerCase() || '').includes(b) ||
-                (c.apellido_paterno?.toLowerCase() || '').includes(b)
+                // CAMBIO CLAVE 2: Adaptado a la columna 'nombre'
+                (c.nombre?.toLowerCase() || '').includes(b)
             );
         }
 
@@ -46,25 +47,25 @@ export default function ClientesCerradosPage() {
 
     // Función para Reabrir Cliente (Vuelve al directorio activo)
     const handleReabrir = async (id, nombre) => {
-        if (window.confirm(`¿Deseas reabrir el expediente de ${nombre}? Volverá al Directorio de Clientes Activos.`)) {
+        if (window.confirm(`¿Deseas reabrir el expediente de ${nombre}? Volverá al Pipeline de Leads Activos.`)) {
             const { error } = await supabase
-                .from('clientes')
+                .from('leads') // CAMBIO CLAVE 3: Actualizamos en 'leads'
                 .update({
                     cerrado: false,
                     motivo_cierre: null,
-                    estado: 'Reabierto'
+                    estado: 'Nuevo Lead' // Reiniciamos el estado para que llame la atención
                 })
                 .eq('id', id);
 
-            if (error) alert("Error al reabrir.");
+            if (error) alert("Error al reabrir el lead.");
             else fetchCerrados(); // Recargar la lista
         }
     };
 
     // Función para Eliminar Definitivamente
     const handleEliminar = async (id, nombre) => {
-        if (window.confirm(`ADVERTENCIA: ¿Eliminar a ${nombre} permanentemente? Se borrarán todos sus registros históricos y financieros.`)) {
-            const { error } = await supabase.from('clientes').delete().eq('id', id);
+        if (window.confirm(`ADVERTENCIA: ¿Eliminar a ${nombre} permanentemente? Se borrarán todos sus registros históricos.`)) {
+            const { error } = await supabase.from('leads').delete().eq('id', id); // CAMBIO CLAVE 4: Borramos de 'leads'
             if (error) alert("Error al eliminar.");
             else fetchCerrados();
         }
@@ -74,9 +75,10 @@ export default function ClientesCerradosPage() {
     const exportarFiltradosAExcel = () => {
         setExportando(true);
         const datosParaExportar = cerradosFiltrados.map(c => ({
-            'Cliente': `${c.nombres} ${c.apellido_paterno}`,
-            'Teléfono': c.telefono,
-            'Trabajo Realizado': c.trabajo_realizado || '-',
+            'Cliente': c.nombre,
+            'Teléfono': c.celular,
+            'Dirección': c.direccion || '-',
+            'Trabajo Solicitado': c.trabajo_solicitado || '-',
             'Motivo de Cierre': c.motivo_cierre || 'No especificado',
             'Estado Final': c.estado,
             'Fecha de Registro': new Date(c.fecha_creacion).toLocaleDateString('es-BO')
@@ -84,8 +86,8 @@ export default function ClientesCerradosPage() {
 
         const worksheet = XLSX.utils.json_to_sheet(datosParaExportar);
         const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, "Clientes Archivados");
-        XLSX.writeFile(workbook, `Clientes_Cerrados_ORE_Filtrados.xlsx`);
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Leads Archivados");
+        XLSX.writeFile(workbook, `Historial_Leads_Cerrados.xlsx`);
         setExportando(false);
     };
 
@@ -95,7 +97,7 @@ export default function ClientesCerradosPage() {
             {/* Cabecera */}
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
                 <div>
-                    <h1 className="text-2xl font-black text-slate-800 tracking-tight">Historial de Clientes Cerrados</h1>
+                    <h1 className="text-2xl font-black text-slate-800 tracking-tight">Historial de Leads Cerrados</h1>
                     <p className="text-sm text-slate-500 mt-1">Consulta los motivos de cierre y recupera prospectos.</p>
                 </div>
                 <button
@@ -111,36 +113,34 @@ export default function ClientesCerradosPage() {
             <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col md:flex-row gap-4">
                 <input
                     type="text"
-                    placeholder="🔍 Buscar en el historial..."
+                    placeholder="🔍 Buscar por nombre..."
                     value={busqueda}
                     onChange={(e) => setBusqueda(e.target.value)}
-                    className="flex-1 border border-slate-300 rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-slate-400"
+                    className="flex-1 border border-slate-300 rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-blue-500"
                 />
                 <select
                     value={filtroMotivo}
                     onChange={(e) => setFiltroMotivo(e.target.value)}
-                    className="w-full md:w-64 border border-slate-300 rounded-lg px-4 py-2 bg-slate-50 outline-none"
+                    className="w-full md:w-64 border border-slate-300 rounded-lg px-4 py-2 bg-slate-50 outline-none focus:ring-2 focus:ring-blue-500"
                 >
                     <option value="Todos">Todos los Motivos</option>
                     <option value="Venta concretada">Venta concretada</option>
-                    <option value="En gestión">En gestión</option>
-                    <option value="Pendiente de pago">Pendiente de pago</option>
-                    <option value="Postergado">Postergado</option>
-                    <option value="Rechazado">Rechazado</option>
-                    <option value="No responde">No responde</option>
+                    <option value="Perdido por precio">Perdido por precio</option>
+                    <option value="Perdido por competencia">Perdido por competencia</option>
+                    <option value="No responde / Desistió">No responde / Desistió</option>
                 </select>
             </div>
 
             {/* Tabla de Resultados */}
             <div className="w-full bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
                 {cargando ? (
-                    <div className="p-10 text-center text-slate-400 animate-pulse">Consultando archivos de ORE...</div>
+                    <div className="p-10 text-center text-slate-400 animate-pulse font-bold tracking-widest uppercase">Consultando archivos...</div>
                 ) : (
                     <table className="w-full text-left text-sm text-slate-600">
                         <thead className="bg-slate-50 border-b border-slate-200 uppercase text-[10px] font-bold text-slate-500 tracking-widest">
                             <tr>
-                                <th className="px-6 py-4">Cliente</th>
-                                <th className="px-6 py-4">Servicio</th>
+                                <th className="px-6 py-4">Lead / Cliente</th>
+                                <th className="px-6 py-4">Servicio Solicitado</th>
                                 <th className="px-6 py-4">Motivo de Cierre</th>
                                 <th className="px-6 py-4 text-right">Acciones</th>
                             </tr>
@@ -152,29 +152,35 @@ export default function ClientesCerradosPage() {
                                 cerradosFiltrados.map(c => (
                                     <tr key={c.id} className="hover:bg-slate-50 transition-colors">
                                         <td className="px-6 py-4">
-                                            <div className="font-bold text-slate-800">{c.nombres} {c.apellido_paterno}</div>
-                                            <div className="text-[10px] text-slate-400 uppercase">{new Date(c.fecha_creacion).toLocaleDateString('es-BO')}</div>
+                                            <div className="font-bold text-slate-800 text-base">{c.nombre}</div>
+                                            <div className="text-[10px] text-slate-400 font-bold tracking-wider mt-1 flex items-center gap-2">
+                                                <span>📱 {c.celular}</span>
+                                                <span>•</span>
+                                                <span className="uppercase">{new Date(c.fecha_creacion).toLocaleDateString('es-BO')}</span>
+                                            </div>
                                         </td>
-                                        <td className="px-6 py-4 text-xs font-semibold">{c.trabajo_realizado || '-'}</td>
+                                        <td className="px-6 py-4 text-xs font-semibold">{c.trabajo_solicitado || <span className="italic text-slate-400">Por definir</span>}</td>
                                         <td className="px-6 py-4">
-                                            <span className={`px-3 py-1 rounded-full text-[10px] font-bold ${c.motivo_cierre === 'Venta concretada' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
+                                            <span className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider ${c.motivo_cierre === 'Venta concretada'
+                                                    ? 'bg-emerald-100 text-emerald-700'
+                                                    : 'bg-rose-100 text-rose-700'
                                                 }`}>
-                                                {c.motivo_cierre}
+                                                {c.motivo_cierre || 'Cerrado'}
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 text-right">
                                             <div className="flex justify-end gap-2">
                                                 <button
-                                                    onClick={() => handleReabrir(c.id, c.nombres)}
-                                                    title="Reabrir / Activar Cliente"
-                                                    className="px-3 py-1.5 bg-blue-50 text-blue-600 rounded-md text-xs font-bold hover:bg-blue-100 transition-all"
+                                                    onClick={() => handleReabrir(c.id, c.nombre)}
+                                                    title="Reabrir / Activar Lead"
+                                                    className="px-4 py-2 bg-blue-50 text-blue-600 rounded-lg text-xs font-black hover:bg-blue-600 hover:text-white transition-all shadow-sm flex items-center gap-1.5"
                                                 >
                                                     🔄 Reabrir
                                                 </button>
                                                 <button
-                                                    onClick={() => handleEliminar(c.id, c.nombres)}
+                                                    onClick={() => handleEliminar(c.id, c.nombre)}
                                                     title="Eliminar permanentemente"
-                                                    className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded transition-all"
+                                                    className="px-3 py-2 text-rose-400 hover:text-white hover:bg-rose-500 rounded-lg transition-all"
                                                 >
                                                     🗑️
                                                 </button>

@@ -25,26 +25,35 @@ function App() {
     // 1. Escuchar sesión actual al cargar
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSesion(session);
-      if (session) cargarPerfil(session.user.id);
+      if (session) cargarPerfil(session.user.id, session.user.email);
       else setCargando(false);
     });
 
     // 2. Escuchar cambios (cuando el usuario inicia o cierra sesión)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSesion(session);
-      if (session) cargarPerfil(session.user.id);
+      if (session) cargarPerfil(session.user.id, session.user.email);
       else { setPerfil(null); setCargando(false); }
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
-  const cargarPerfil = async (userId) => {
-    const { data } = await supabase.from('perfiles').select('*').eq('id', userId).single();
+  // SOLUCIÓN: Pasamos el email directo de Google como plan B
+  const cargarPerfil = async (userId, userEmail) => {
+    // maybeSingle() evita que Supabase lance el error 406 si el perfil no existe
+    const { data } = await supabase.from('perfiles').select('*').eq('id', userId).maybeSingle();
+
     if (data) {
       setPerfil(data);
-      // Si el supervisor entra y la vista Inicio (Dashboard) está bloqueada, lo movemos a Clientes
-      if (data.rol === 'Supervisor') setVistaActiva('Clientes');
+    } else {
+      // Si eres un usuario antiguo y el Trigger no te detectó, te creamos un perfil virtual
+      setPerfil({
+        id: userId,
+        email: userEmail,
+        rol: 'Pendiente',
+        nombre_completo: 'Usuario'
+      });
     }
     setCargando(false);
   };
@@ -53,28 +62,27 @@ function App() {
     await supabase.auth.signOut();
   };
 
-  // Pantalla de carga mientras verifica si estás logueado
   if (cargando) {
     return (
       <div className="h-screen bg-slate-900 flex items-center justify-center">
         <div className="font-black text-slate-400 animate-pulse uppercase tracking-widest text-xl">
-          Sincronizando ORE...
+          Sincronizando datos...
         </div>
       </div>
     );
   }
 
-  // Si no hay sesión, mostramos la pantalla de Login
   if (!sesion) return <LoginPage />;
-  // NUEVO: Pantalla de bloqueo para usuarios no aprobados
-  if (perfil && perfil.rol === 'Pendiente') {
+
+  // LA LLAVE MAESTRA: Se salta el bloqueo si el correo es el tuyo
+  if (perfil && perfil.rol === 'Pendiente' && perfil.email !== 'novasolum.info@gmail.com') {
     return (
       <div className="h-screen bg-slate-100 flex flex-col items-center justify-center p-6">
         <div className="bg-white p-8 rounded-2xl shadow-lg max-w-md w-full text-center border border-slate-200">
           <div className="text-5xl mb-4">🔒</div>
           <h2 className="text-xl font-black text-slate-800 mb-2">Cuenta en Revisión</h2>
           <p className="text-slate-500 text-sm mb-6">
-            Has iniciado sesión correctamente, pero tu cuenta aún no tiene permisos asignados. Por favor, contacta al (Super Administrador) para que habilite tu acceso.
+            Has iniciado sesión correctamente, pero tu cuenta aún no tiene permisos asignados. Por favor, contacta al Super Administrador para que habilite tu acceso.
           </p>
           <button
             onClick={handleLogout}
@@ -86,7 +94,7 @@ function App() {
       </div>
     );
   }
-  // Si hay sesión, mostramos el CRM
+
   return (
     <MainLayout setVistaActiva={setVistaActiva} vistaActiva={vistaActiva} perfil={perfil} onLogout={handleLogout}>
       {vistaActiva === 'Inicio' && <DashboardPage />}
@@ -101,5 +109,4 @@ function App() {
   );
 }
 
-// ¡AQUÍ ESTÁ LA LÍNEA QUE FALTABA!
 export default App;

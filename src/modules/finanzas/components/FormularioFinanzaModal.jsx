@@ -4,7 +4,7 @@ import { supabase } from '../../../lib/supabase';
 export default function FormularioFinanzaModal({ isOpen, onClose, onGuardado }) {
     const [guardando, setGuardando] = useState(false);
     const [clientes, setClientes] = useState([]);
-    const [personal, setPersonal] = useState([]); // NUEVO: Estado para los empleados
+    const [personal, setPersonal] = useState([]);
 
     const [formData, setFormData] = useState({
         tipo: 'Gasto',
@@ -22,7 +22,6 @@ export default function FormularioFinanzaModal({ isOpen, onClose, onGuardado }) 
     useEffect(() => {
         if (isOpen) {
             cargarDatosBasicos();
-            // Reseteamos el formulario al abrir
             setFormData({
                 tipo: 'Gasto', categoria: '', concepto: '', monto: '',
                 cliente_id: '', servicio: '', banco: 'Efectivo',
@@ -32,16 +31,14 @@ export default function FormularioFinanzaModal({ isOpen, onClose, onGuardado }) 
     }, [isOpen]);
 
     const cargarDatosBasicos = async () => {
-        // Traemos clientes activos
-        const { data: dataClientes } = await supabase.from('clientes').select('*').eq('cerrado', false);
+        // ADAPTADO: Ahora consultamos la tabla 'leads'
+        const { data: dataClientes } = await supabase.from('leads').select('*').eq('cerrado', false);
         if (dataClientes) setClientes(dataClientes);
 
-        // Traemos las cuentas etiquetadas como 'Personal'
         const { data: dataPersonal } = await supabase.from('directorio_cuentas').select('*').eq('tipo', 'Personal');
         if (dataPersonal) setPersonal(dataPersonal);
     };
 
-    // Función inteligente para cuando se selecciona un empleado
     const handleSeleccionarEmpleado = (e) => {
         const idEmpleado = e.target.value;
         const empleado = personal.find(p => p.id === idEmpleado);
@@ -49,7 +46,7 @@ export default function FormularioFinanzaModal({ isOpen, onClose, onGuardado }) 
         if (empleado) {
             setFormData({
                 ...formData,
-                servicio: `Sueldo: ${empleado.titular}`, // Lo guardamos en la columna servicio
+                servicio: `Sueldo: ${empleado.titular}`,
                 banco: empleado.banco || 'Efectivo',
                 numero_cuenta: empleado.numero_cuenta || '',
                 titular: empleado.titular || ''
@@ -63,11 +60,13 @@ export default function FormularioFinanzaModal({ isOpen, onClose, onGuardado }) 
         e.preventDefault();
         setGuardando(true);
 
-        const datosParaSupabase = { ...formData };
+        const datosParaSupabase = {
+            ...formData,
+            monto: parseFloat(formData.monto) // Aseguramos que sea número
+        };
 
-        // INTERCEPCIÓN DE NÓMINA: Arreglamos los datos antes de enviarlos a la base de datos
         if (datosParaSupabase.cliente_id === 'pago-personal') {
-            datosParaSupabase.cliente_id = null; // No hay cliente real
+            datosParaSupabase.cliente_id = null;
             datosParaSupabase.categoria = 'Nómina y Salarios';
         } else if (datosParaSupabase.cliente_id === '') {
             datosParaSupabase.cliente_id = null;
@@ -104,7 +103,6 @@ export default function FormularioFinanzaModal({ isOpen, onClose, onGuardado }) 
                 <div className="p-6 overflow-y-auto custom-scrollbar">
                     <form id="form-finanzas" onSubmit={handleSubmit} className="flex flex-col gap-6">
 
-                        {/* Tipo y Monto */}
                         <div className="grid grid-cols-2 gap-4">
                             <div className="flex flex-col gap-1.5">
                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Tipo de Movimiento</label>
@@ -132,7 +130,6 @@ export default function FormularioFinanzaModal({ isOpen, onClose, onGuardado }) 
                             </div>
                         </div>
 
-                        {/* Concepto */}
                         <div className="flex flex-col gap-1.5">
                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Concepto / Detalle *</label>
                             <input
@@ -146,10 +143,7 @@ export default function FormularioFinanzaModal({ isOpen, onClose, onGuardado }) 
 
                         <hr className="border-slate-100" />
 
-                        {/* VINCULACIÓN INTELIGENTE (CLIENTE Y SERVICIO) */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-                            {/* Desplegable de Cliente / Nómina */}
                             <div className="flex flex-col gap-1.5">
                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Vincular a Proyecto</label>
                                 <select
@@ -158,28 +152,26 @@ export default function FormularioFinanzaModal({ isOpen, onClose, onGuardado }) 
                                     className="border border-slate-200 rounded-xl px-4 py-2.5 outline-none focus:border-blue-500 font-bold text-slate-700 bg-slate-50 cursor-pointer"
                                 >
                                     <option value="">-- Gasto General / Ninguno --</option>
-                                    {/* LA OPCIÓN MÁGICA */}
                                     {formData.tipo === 'Gasto' && (
                                         <option value="pago-personal" className="bg-indigo-100 text-indigo-800 font-black">
                                             🏢 PAGO AL PERSONAL / NÓMINA
                                         </option>
                                     )}
-                                    <optgroup label="Clientes Activos">
+                                    <optgroup label="Leads / Clientes Activos">
                                         {clientes.map(c => (
-                                            <option key={c.id} value={c.id}>{c.nombres} {c.apellido_paterno || ''}</option>
+                                            /* ADAPTADO: Usamos 'c.nombre' */
+                                            <option key={c.id} value={c.id}>{c.nombre}</option>
                                         ))}
                                     </optgroup>
                                 </select>
                             </div>
 
-                            {/* Desplegable Dinámico: Servicio o Empleado */}
                             <div className="flex flex-col gap-1.5">
                                 <label className={`text-[10px] font-black uppercase tracking-widest ${formData.cliente_id === 'pago-personal' ? 'text-indigo-500' : 'text-slate-400'}`}>
                                     {formData.cliente_id === 'pago-personal' ? '💼 Seleccionar Empleado' : '🛠️ Servicio Realizado'}
                                 </label>
 
                                 {formData.cliente_id === 'pago-personal' ? (
-                                    /* Vista de Empleados */
                                     <select
                                         onChange={handleSeleccionarEmpleado}
                                         className="border-2 border-indigo-200 rounded-xl px-4 py-2.5 outline-none focus:border-indigo-500 font-black text-indigo-800 bg-indigo-50 cursor-pointer"
@@ -190,7 +182,6 @@ export default function FormularioFinanzaModal({ isOpen, onClose, onGuardado }) 
                                         ))}
                                     </select>
                                 ) : (
-                                    /* Vista Normal de Servicios */
                                     <select
                                         value={formData.servicio}
                                         onChange={e => setFormData({ ...formData, servicio: e.target.value })}
@@ -206,7 +197,6 @@ export default function FormularioFinanzaModal({ isOpen, onClose, onGuardado }) 
                             </div>
                         </div>
 
-                        {/* Si no es nómina, mostramos la categoría normal */}
                         {formData.cliente_id !== 'pago-personal' && (
                             <div className="flex flex-col gap-1.5">
                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Categoría Contable</label>
@@ -234,7 +224,6 @@ export default function FormularioFinanzaModal({ isOpen, onClose, onGuardado }) 
 
                         <hr className="border-slate-100" />
 
-                        {/* Datos Bancarios (Se autocompletan si es personal) */}
                         <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
                             <h3 className="text-xs font-black text-slate-700 mb-3 flex items-center gap-2"><span>🏦</span> Datos de Conciliación Bancaria</h3>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

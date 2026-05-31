@@ -101,7 +101,7 @@ export default function DashboardPage() {
                 <div className="relative z-10">
                     <h1 className="text-3xl font-black tracking-tight mb-2">Resumen Ejecutivo</h1>
                     <p className="text-blue-200 font-medium max-w-xl">
-                        Bienvenido de vuelta. Aquí tienes el panorama general de las operaciones, finanzas y estado del inventario de ORE.
+                        Un vistazo rápido a los indicadores clave de rendimiento.
                     </p>
                 </div>
                 <div className="absolute top-0 right-0 -translate-y-12 translate-x-1/3 opacity-10 pointer-events-none">

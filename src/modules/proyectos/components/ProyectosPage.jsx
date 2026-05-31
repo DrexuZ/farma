@@ -22,13 +22,18 @@ export default function ProyectosPage() {
     useEffect(() => {
         const fetchDatosAnalytics = async () => {
             setCargando(true);
-            const { data } = await supabase
+            // ADAPTADO: Ahora consultamos la relación con la tabla 'leads' y extraemos el 'nombre'
+            const { data, error } = await supabase
                 .from('finanzas')
-                .select(`*, clientes (nombres, apellido_paterno)`)
+                .select(`*, leads (nombre)`)
                 .not('cliente_id', 'is', null)
                 .not('servicio', 'is', null);
 
-            if (data) setFinanzas(data);
+            if (error) {
+                console.error("Error al cargar analíticas:", error);
+            } else if (data) {
+                setFinanzas(data);
+            }
             setCargando(false);
         };
         fetchDatosAnalytics();
@@ -42,7 +47,8 @@ export default function ProyectosPage() {
 
         finanzas.forEach(mov => {
             const llave = `${mov.cliente_id}-${mov.servicio}`;
-            const nombreCliente = `${mov.clientes?.nombres || ''} ${mov.clientes?.apellido_paterno || ''}`.trim() || 'Cliente Sin Nombre';
+            // ADAPTADO: Leemos directamente de mov.leads.nombre
+            const nombreCliente = mov.leads?.nombre || 'Cliente Sin Nombre';
 
             clientesMap.set(mov.cliente_id, nombreCliente);
             serviciosSet.add(mov.servicio);
@@ -51,7 +57,8 @@ export default function ProyectosPage() {
                 agrupados[llave] = {
                     id: llave,
                     cliente_id: mov.cliente_id,
-                    nombre: `${mov.clientes?.nombres?.split(' ')[0] || 'Desconocido'} - ${mov.servicio}`,
+                    // ADAPTADO: Tomamos el primer nombre separando por el primer espacio
+                    nombre: `${nombreCliente.split(' ')[0]} - ${mov.servicio}`,
                     cliente: nombreCliente,
                     servicio: mov.servicio,
                     ingresos: 0, gastos: 0, insumos: [], ultimoMovimiento: 0
@@ -184,7 +191,6 @@ export default function ProyectosPage() {
                 </div>
 
                 <div className="relative z-10 flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
-                    {/* Selector de Perspectiva movido arriba */}
                     <select
                         value={filtroVista}
                         onChange={(e) => setFiltroVista(e.target.value)}
@@ -205,7 +211,7 @@ export default function ProyectosPage() {
                 </div>
             </div>
 
-            {/* BLOQUE 1: KPIs SUPERIORES (Se muestran antes que todo) */}
+            {/* BLOQUE 1: KPIs SUPERIORES */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className={`bg-white p-6 rounded-3xl border transition-opacity ${filtroVista === 'Gastos' ? 'opacity-40' : 'border-emerald-100 shadow-sm border-l-4 border-l-emerald-500'}`}>
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Ingresos</p>
@@ -234,7 +240,6 @@ export default function ProyectosPage() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
-
                     {/* LADO IZQUIERDO: CLIENTES */}
                     <div className="flex flex-col gap-3">
                         <div className="flex justify-between items-end mb-2">
@@ -282,7 +287,6 @@ export default function ProyectosPage() {
                             ))}
                         </div>
                     </div>
-
                 </div>
             </div>
 

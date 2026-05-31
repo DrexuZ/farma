@@ -12,7 +12,7 @@ export default function LoginPage() {
         <div className="min-h-screen bg-slate-900 flex items-center justify-center p-6">
             <div className="max-w-md w-full bg-white rounded-3xl shadow-2xl overflow-hidden p-10 flex flex-col items-center gap-8 animate-in fade-in zoom-in-95 duration-500">
                 <div className="text-center">
-                    <h1 className="text-4xl font-black text-slate-900 tracking-tighter italic">ORE</h1>
+                    <h1 className="text-4xl font-black text-slate-900 tracking-tighter italic"></h1>
                     <p className="text-slate-500 text-sm font-medium mt-2 uppercase tracking-widest">Management System</p>
                 </div>
 

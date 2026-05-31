@@ -24,7 +24,8 @@ export default function FinanzasPage() {
                 'Categoría': mov.categoria || '-',
                 'Detalle / Concepto': mov.concepto,
                 'Monto (Bs)': Number(mov.monto),
-                'Cliente Relacionado': mov.clientes ? `${mov.clientes.nombres} ${mov.clientes.apellido_paterno}` : 'Gasto General / No asignado',
+                // ADAPTADO: Ahora lee de la relación con 'leads'
+                'Lead / Cliente Relacionado': mov.leads ? mov.leads.nombre : 'Gasto General / No asignado',
                 'Servicio Realizado': mov.servicio || '-',
                 'Banco / Entidad': mov.banco || 'Efectivo',
                 'Nro. Cuenta': mov.numero_cuenta || '-',
@@ -47,7 +48,6 @@ export default function FinanzasPage() {
     return (
         <div className="p-4 md:p-8 max-w-[98%] mx-auto flex flex-col gap-6 animate-in fade-in duration-500 pb-20">
 
-            {/* Cabecera */}
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
                 <div>
                     <h1 className="text-2xl font-black text-slate-800 tracking-tight">Control Financiero</h1>
@@ -71,7 +71,6 @@ export default function FinanzasPage() {
                 </div>
             </div>
 
-            {/* Tarjetas de Métricas Rápidas (Sin decimales) */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 border-l-4 border-l-blue-500">
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Ingresos Totales (Vista)</p>
@@ -89,7 +88,6 @@ export default function FinanzasPage() {
                 </div>
             </div>
 
-            {/* Tabla de Movimientos */}
             <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
                 <FinanzasTable
                     refreshTrigger={refreshTrigger}
