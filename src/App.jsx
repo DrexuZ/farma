@@ -52,7 +52,7 @@ function App() {
         id: userId,
         email: userEmail,
         rol: 'Pendiente',
-        nombre_completo: 'Usuario ORE'
+        nombre_completo: 'Usuario'
       });
     }
     setCargando(false);
@@ -66,7 +66,7 @@ function App() {
     return (
       <div className="h-screen bg-slate-900 flex items-center justify-center">
         <div className="font-black text-slate-400 animate-pulse uppercase tracking-widest text-xl">
-          Sincronizando ORE...
+          Sincronizando...
         </div>
       </div>
     );
