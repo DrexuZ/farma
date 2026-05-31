@@ -45,7 +45,7 @@ export default function MainLayout({ children, vistaActiva, setVistaActiva, perf
     return (
         <div className="flex h-screen bg-gray-100 overflow-hidden relative">
 
-            {/* BARRA SUPERIOR MÓVIL (Visible solo en celulares) */}
+            {/* BARRA SUPERIOR MÓVIL */}
             <div className="md:hidden bg-gray-900 text-white flex justify-between items-center p-4 w-full absolute top-0 z-20 shadow-md">
                 <div className="flex flex-col">
                     <h1 className="text-xl font-bold tracking-wider text-blue-400 leading-none">ORE CRM</h1>
@@ -62,7 +62,7 @@ export default function MainLayout({ children, vistaActiva, setVistaActiva, perf
                 </button>
             </div>
 
-            {/* OVERLAY OSCURO MÓVIL (Fondo negro transparente al abrir el menú) */}
+            {/* OVERLAY OSCURO MÓVIL */}
             {menuAbierto && (
                 <div
                     className="fixed inset-0 bg-black/60 z-30 md:hidden backdrop-blur-sm transition-opacity"
