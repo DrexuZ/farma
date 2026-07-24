@@ -806,23 +806,55 @@ function App() {
   // --------------------------------------------------------------------------
   if (pantallaBloqueada) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center font-sans">
-        <div className="bg-white p-8 rounded-2xl shadow-2xl w-96 flex flex-col items-center">
-          <img src="/logofarma.png" alt="Logo" className="h-20 w-auto object-contain mb-2" />
-          <h1 className="text-2xl font-black text-gray-800 mb-1">FarmaGO</h1>
-          <p className="text-gray-400 text-xs mb-6 text-center font-medium">Sistema de Gestión y Punto de Venta</p>
-          <form onSubmit={manejarAperturaCaja} className="w-full flex flex-col gap-4">
+      <div className="min-h-screen flex font-sans">
+        {/* Panel izquierdo - branding */}
+        <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-[#341645] via-[#2a1038] to-[#1a0a25] relative overflow-hidden flex-col items-center justify-center p-12">
+          <div className="absolute top-0 left-0 w-96 h-96 bg-[#c9a84c]/5 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
+          <div className="absolute bottom-0 right-0 w-80 h-80 bg-[#4a1a5e]/10 rounded-full blur-3xl translate-x-1/3 translate-y-1/3"></div>
+          <div className="relative z-10 flex flex-col items-center text-center">
+            <img src="/logo_farmanova.png" alt="FarmaNova" className="w-48 h-48 object-contain mb-8 drop-shadow-2xl" />
+            <h1 className="text-4xl font-black text-white tracking-tight mb-3">FarmaNova</h1>
+            <p className="text-[#e8d48b] text-sm font-bold uppercase tracking-[0.3em] mb-6">Solución Comercio</p>
+            <div className="w-16 h-px bg-[#c9a84c]/40 mb-6"></div>
+            <p className="text-[#b494c8] text-xs font-medium max-w-xs leading-relaxed">
+              Sistema de gestión y punto de venta para farmacias y comercios.
+            </p>
+          </div>
+          <div className="absolute bottom-8 left-0 right-0 text-center">
+            <p className="text-[#6b4590] text-[9px] font-bold uppercase tracking-[0.25em]">Parte del Ecosistema NovaSolum</p>
+          </div>
+        </div>
+
+        {/* Panel derecho - formulario */}
+        <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-white relative">
+          <div className="absolute top-8 left-8 flex items-center gap-3 lg:hidden">
+            <img src="/logo_farmanova.png" alt="FarmaNova" className="w-10 h-10 object-contain" />
             <div>
-              <input type="password" maxLength="4" required placeholder="PIN de Acceso" className="w-full p-3 border rounded-lg text-center text-2xl tracking-widest outline-none focus:ring-2 focus:ring-[#2596be]" value={pinAcceso} onChange={(e) => setPinAcceso(e.target.value)} />
+              <h2 className="text-sm font-black text-[#341645] tracking-tight">FarmaNova</h2>
+              <p className="text-[8px] text-[#c9a84c] font-bold uppercase tracking-widest">Solución Comercio</p>
             </div>
-            <div>
-              <input type="number" step="0.10" required placeholder="Fondo Inicial de Caja (Bs.)" className="w-full p-3 border rounded-lg text-lg outline-none focus:ring-2 focus:ring-[#2596be]" value={montoApertura} onChange={(e) => setMontoApertura(e.target.value)} />
+          </div>
+          <div className="w-full max-w-sm">
+            <div className="mb-10">
+              <h2 className="text-3xl font-black text-[#341645] tracking-tight">Abrir Caja</h2>
+              <p className="text-slate-400 text-sm mt-2 font-medium">Ingresa tu PIN para iniciar el turno.</p>
             </div>
-            {errorLogin && <p className="text-red-500 text-sm font-semibold text-center bg-red-50 p-2 rounded">{errorLogin}</p>}
-            <button type="submit" disabled={cargandoLogin} className="w-full bg-[#2596be] hover:bg-[#1b6f8f] text-white font-bold py-3 rounded-xl mt-2 transition-colors">
-              {cargandoLogin ? 'Validando...' : '🔓 Abrir Caja'}
-            </button>
-          </form>
+            <form onSubmit={manejarAperturaCaja} className="w-full flex flex-col gap-4">
+              <input type="password" maxLength="4" required placeholder="PIN de Acceso" className="w-full p-4 border-2 border-slate-100 rounded-2xl text-center text-2xl tracking-widest outline-none focus:border-[#341645] font-bold text-slate-700 transition-colors" value={pinAcceso} onChange={(e) => setPinAcceso(e.target.value)} />
+              <input type="number" step="0.10" required placeholder="Fondo Inicial de Caja (Bs.)" className="w-full p-4 border-2 border-slate-100 rounded-2xl text-lg outline-none focus:border-[#341645] font-bold text-slate-700 transition-colors" value={montoApertura} onChange={(e) => setMontoApertura(e.target.value)} />
+              {errorLogin && <p className="text-red-500 text-sm font-semibold text-center bg-red-50 p-3 rounded-xl">{errorLogin}</p>}
+              <button type="submit" disabled={cargandoLogin} className="w-full bg-[#341645] hover:bg-[#2a1038] text-white font-bold py-4 rounded-2xl mt-2 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 text-sm uppercase tracking-wider">
+                {cargandoLogin ? 'Validando...' : '🔓 Abrir Caja'}
+              </button>
+            </form>
+            <div className="mt-12 flex flex-col items-center gap-3">
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-px bg-slate-200"></div>
+                <span className="text-[9px] text-slate-300 font-bold uppercase tracking-widest">NovaSolum</span>
+                <div className="w-6 h-px bg-slate-200"></div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -1226,9 +1258,13 @@ function App() {
       )}
 
       {/* CABECERA DINÁMICA CON SEGURIDAD POR ROLES */}
-      <header className="bg-[#2596be] text-white p-4 shadow-md flex justify-between items-center print:hidden">
-        <div className="flex items-center gap-4">
-          <img src="/logofarma.png" alt="Logo" className="h-9 w-auto object-contain bg-white/10 p-1 rounded border border-white/20" />
+      <header className="bg-[#341645] text-white p-4 shadow-md flex justify-between items-center print:hidden">
+          <div className="flex items-center gap-3">
+            <img src="/logo_farmanova.png" alt="FarmaNova" className="h-10 w-auto object-contain bg-white/10 p-1 rounded-lg border border-white/20" />
+            <div className="flex flex-col">
+              <span className="text-sm font-black tracking-tight leading-none">FarmaNova</span>
+              <span className="text-[8px] text-[#c9a84c] font-bold uppercase tracking-widest">Solución Comercio</span>
+            </div>
           <h1 className="text-xl font-black tracking-wider">FarmaGO</h1>
 
           <nav className="flex bg-[#1b6f8f]/30 p-1 rounded-lg border border-[#2596be]/30 ml-2">
