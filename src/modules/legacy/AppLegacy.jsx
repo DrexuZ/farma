@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import DiccionarioScreen from '../diccionario/DiccionarioScreen';
+import PrescripcionScreen from '../prescripcion/PrescripcionScreen';
 import DashboardGeneral from '../dashboard/DashboardGeneral';
 
 const moleculasIniciales = [
@@ -2454,6 +2455,7 @@ function App({ onCerrarSesion }) {
         {/* FILA 2: navegación completa — todas las pestañas visibles sin deslizar */}
         <nav className="flex items-center gap-1 bg-black/15 backdrop-blur-sm border-t border-white/10 px-3 py-1.5 overflow-x-auto no-scrollbar">
           <button onClick={() => setPestañaActiva('pos')} className={`px-3 py-1.5 rounded-lg text-sm font-bold whitespace-nowrap shrink-0 transition-all duration-200 ${pestañaActiva === 'pos' ? 'bg-white text-brand-700 shadow-lg' : 'text-blue-100 hover:text-white hover:bg-white/10'}`}>🛒 Punto de Venta</button>
+          <button onClick={() => setPestañaActiva('prescripcion')} className={`px-3 py-1.5 rounded-lg text-sm font-bold whitespace-nowrap shrink-0 transition-all duration-200 ${pestañaActiva === 'prescripcion' ? 'bg-white text-brand-700 shadow-lg' : 'text-blue-100 hover:text-white hover:bg-white/10'}`}>💊 Prescripción AEMPS</button>
 
           {/* 🔒 FILTRO DE ROLES: Las pestañas desaparecen si el usuario no es un ADMIN homologado */}
           {['ADMIN', 'SUPER_ADMIN'].includes(rolUsuario) && (
@@ -3186,6 +3188,10 @@ function App({ onCerrarSesion }) {
               </div>
             )}
           </section>
+
+        ) : pestañaActiva === 'prescripcion' ? (
+
+          <PrescripcionScreen />
 
         ) : pestañaActiva === 'diccionario' && ['ADMIN', 'SUPER_ADMIN'].includes(rolUsuario) ? (
 
