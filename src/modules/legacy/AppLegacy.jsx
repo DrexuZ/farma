@@ -1251,6 +1251,7 @@ function App({ onCerrarSesion }) {
       }
     }
     if (pestañaActiva === 'dashboard') cargarDashboard();
+    if (pestañaActiva === 'ventas') cargarHistorialVentas();
     if (pestañaActiva === 'crm') {
       cargarProveedores();
       cargarVisitadores();
